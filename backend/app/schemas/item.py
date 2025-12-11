@@ -1,0 +1,20 @@
+from pydantic import BaseModel
+
+
+class ItemBase(BaseModel):
+    title: str
+    description: str | None = None
+
+
+class ItemCreate(ItemBase):
+    owner_id: int
+
+
+class Item(ItemBase):
+    id: int
+    owner_id: int
+
+    model_config = {
+        "from_attributes": True
+    }
+

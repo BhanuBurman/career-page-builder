@@ -1,14 +1,20 @@
 import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+
+from app import models
+from app.database import engine
 from app.routers import api_router
 from config import settings
+
+# Create DB tables at startup (safe to call multiple times)
+models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI(
     title="Career Page Builder API",
     description="API for Career Page Builder application",
     version="1.0.0",
-    debug=settings.debug
+    debug=settings.debug,
 )
 
 # CORS middleware
@@ -39,5 +45,5 @@ if __name__ == "__main__":
         "main:app",
         host=settings.api_host,
         port=settings.api_port,
-        reload=settings.debug
+        reload=settings.debug,
     )
