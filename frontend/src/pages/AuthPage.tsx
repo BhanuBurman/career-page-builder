@@ -1,84 +1,105 @@
-import { useState } from 'react'
-import Login from '../components/Login'
-import { supabase } from '../supabaseClient'
+import React, { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { supabase } from '../lib/supabaseClient'
+import { useAuth } from '../context/AuthContext'
 
-interface ApiResponse {
-  user_id: string
-  email: string
-  message: string
-}
+export default function AuthPage() {
+  const navigate = useNavigate()
+  const { user } = useAuth()
+  
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [isSignUp, setIsSignUp] = useState(false)
 
-const AuthPage = () => {
-  const [apiData, setApiData] = useState<ApiResponse | null>(null)
-  const [apiError, setApiError] = useState<string | null>(null)
+  // Auto-redirect if already logged in
+  useEffect(() => {
+    if (user) navigate('/dashboard', { replace: true })
+  }, [user, navigate])
 
-  // Example: Call protected FastAPI endpoint
-  const callProtectedAPI = async () => {
+  const handleAuth = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setLoading(true)
+    setError(null)
+
     try {
-      const session = await supabase.auth.getSession()
-      const token = session.data.session?.access_token
+      const { error } = isSignUp 
+        ? await supabase.auth.signUp({ 
+            email, 
+            password, 
+            options: { emailRedirectTo: `${window.location.origin}/` } 
+          })
+        : await supabase.auth.signInWithPassword({ email, password })
 
-      if (!token) {
-        setApiError('Not authenticated')
-        return
-      }
-
-      const response = await fetch('http://localhost:8000/api/auth/me', {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      })
-
-      if (!response.ok) {
-        const error = await response.json()
-        throw new Error(error.detail || 'Failed to fetch')
-      }
-
-      const data = await response.json()
-      setApiData(data)
-      setApiError(null)
-    } catch (error) {
-      setApiError(error instanceof Error ? error.message : 'An unknown error occurred')
-      setApiData(null)
+      if (error) throw error
+      
+      if (isSignUp) alert('Check your email for the verification link!')
+      // If login is successful, AuthContext detects it -> triggers useEffect -> redirects to /dashboard
+    } catch (err: any) {
+      setError(err.message)
+    } finally {
+      setLoading(false)
     }
   }
 
+  const handleGoogleLogin = async () => {
+    await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: { redirectTo: `${window.location.origin}/` },
+    })
+  }
+
   return (
-    <div className="min-h-screen bg-gray-50 py-12 px-4">
-      <div className="max-w-2xl mx-auto">
-        <h1 className="text-4xl font-bold text-center text-gray-900 mb-8">
-          Career Page Builder
-        </h1>
-        <div className="bg-white rounded-lg shadow-md p-8">
-          <Login />
-          <hr className="my-8 border-gray-300" />
-          <div className="mt-8">
-            <h3 className="text-xl font-semibold text-gray-800 mb-4">
-              Test Protected API
-            </h3>
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+      <div className="max-w-md w-full bg-white rounded-lg shadow p-8">
+        <h2 className="text-2xl font-bold mb-6 text-center text-gray-800">
+          {isSignUp ? 'Create Account' : 'Welcome Back'}
+        </h2>
+
+        {error && <div className="mb-4 p-3 bg-red-50 text-red-700 rounded text-sm">{error}</div>}
+
+        <form onSubmit={handleAuth} className="space-y-4">
+          <input
+            type="email"
+            placeholder="Email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            className="w-full px-4 py-3 border rounded focus:ring-2 focus:ring-blue-500 outline-none"
+            required
+          />
+          <input
+            type="password"
+            placeholder="Password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            className="w-full px-4 py-3 border rounded focus:ring-2 focus:ring-blue-500 outline-none"
+            required
+            minLength={6}
+          />
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full py-3 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:bg-gray-400"
+          >
+            {loading ? 'Processing...' : isSignUp ? 'Sign Up' : 'Log In'}
+          </button>
+        </form>
+
+        <div className="mt-6 text-center space-y-4">
+          <button onClick={() => setIsSignUp(!isSignUp)} className="text-blue-600 text-sm hover:underline">
+            {isSignUp ? 'Already have an account? Log In' : 'Need an account? Sign Up'}
+          </button>
+          <div className="border-t pt-4">
             <button
-              onClick={callProtectedAPI}
-              className="px-6 py-3 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors font-medium"
+              onClick={handleGoogleLogin}
+              className="w-full py-3 border border-gray-300 rounded hover:bg-gray-50 text-gray-700"
             >
-              Call /api/auth/me
+              Continue with Google
             </button>
-            {apiData && (
-              <div className="mt-4 p-4 bg-gray-100 rounded-md border border-gray-200">
-                <pre className="text-sm text-gray-800 whitespace-pre-wrap break-words">
-                  {JSON.stringify(apiData, null, 2)}
-                </pre>
-              </div>
-            )}
-            {apiError && (
-              <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-md">
-                <p className="text-red-800 font-medium">Error: {apiError}</p>
-              </div>
-            )}
           </div>
         </div>
       </div>
     </div>
   )
 }
-
-export default AuthPage

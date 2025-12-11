@@ -1,9 +1,12 @@
+from typing import List
+from app.models.company import Company
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
 from app import schemas
 from app.crud.company import (
     create_company,
+    get_all_companies_by_recruiter,
     update_company,
     get_company_by_slug_public,
     get_company_by_recruiter,
@@ -107,3 +110,23 @@ def get_company_recruiter_endpoint(
             detail="Company not found or you do not have access to it",
         )
     return company
+
+@router.get(
+    "/all",
+    response_model=List[schemas.CompanyBasicResponse],
+    status_code=status.HTTP_200_OK,
+)
+def get_company_recruiter_endpoint(
+    db: Session = Depends(get_db),
+    token_payload=Depends(verify_token),
+) -> List[schemas.CompanyBasicResponse]:
+    """Fetch full company data for recruiter (requires authentication)."""
+    recruiter_id = token_payload.get("sub")
+    if not recruiter_id:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Missing user id in token",
+        )
+
+    companies = get_all_companies_by_recruiter(db, recruiter_id)
+    return companies

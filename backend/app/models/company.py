@@ -37,3 +37,4 @@ class Company(Base):
 
     # Relationship to Jobs
     jobs = relationship("Job", back_populates="company", cascade="all, delete-orphan")
+

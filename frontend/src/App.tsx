@@ -1,18 +1,64 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import { AuthProvider } from './context/AuthContext'
+import ProtectedRoute from './components/ProtectedRoute'
+
+// Pages
 import HomePage from './pages/HomePage'
-import AuthPage from './pages/AuthPage'
-import './App.css'
 import DashboardPage from './pages/DashboardPage'
+import AuthPage from './pages/AuthPage'
+
+import './App.css'
+import PageBuilder from './pages/PageBuilder'
+import CareerPage from './pages/CareerPage'
+import JobCreateSection from './components/JobCreateSection'
 
 function App() {
   return (
-    <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<HomePage />} />
-        <Route path="/auth" element={<AuthPage />} />
-        <Route path="/dashboard" element={<DashboardPage />} />
-      </Routes>
-    </BrowserRouter>
+    // 1. Wrap the entire app in AuthProvider so 'useAuth' works everywhere
+    <AuthProvider>
+      <BrowserRouter>
+        <Routes>
+          {/* Public Routes */}
+          <Route path="/" element={<HomePage />} />
+          <Route path="/auth" element={<AuthPage />} />
+          <Route path="/:slug/careers" element={<CareerPage />} />
+
+          {/* Protected Routes (Require Login) */}
+          <Route 
+            path="/dashboard" 
+            element={
+              <ProtectedRoute>
+                <DashboardPage />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/page-builder" 
+            element={
+              <ProtectedRoute>
+                <PageBuilder />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/page-builder/:slug" 
+            element={
+              <ProtectedRoute>
+                <PageBuilder />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/manage-jobs" 
+            element={
+              <ProtectedRoute>
+                <JobCreateSection />
+              </ProtectedRoute>
+            } 
+          />
+        </Routes>
+      </BrowserRouter>
+    </AuthProvider>
   )
 }
 

@@ -1,38 +1,54 @@
 from datetime import datetime
-from pydantic import BaseModel, Field, HttpUrl, EmailStr
-from typing import Optional
+from pydantic import BaseModel, Field, HttpUrl
+from typing import Optional, List, Literal
+
+# --- Sub-Models ---
 
 
-# Strict Validation for Branding
 class BrandingConfig(BaseModel):
     primary_color: str = Field(
         default="#000000", pattern="^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$"
     )
     secondary_color: str = Field(default="#ffffff")
-    logo_url: Optional[HttpUrl] = None
+    logo_url: Optional[str] = (
+        None  # Changed to str to be more forgiving with inputs, or keep HttpUrl if strict
+    )
 
 
-# Strict Validation for Page Content
-class HeroSection(BaseModel):
+class HeaderSection(BaseModel):
     title: str = "We are hiring"
-    subtitle: str = "Join our team"
+    subtitle: str = "Join our team to build the future."
+
+
+class AboutSubSection(BaseModel):
+    title: str
+    description: str
+    image_url: Optional[str] = None
+    # alignment determines if text is on the left or right
+    alignment: Literal["left", "right"] = "left"
 
 
 class PageContent(BaseModel):
-    hero: HeroSection = HeroSection()
-    about_text: str = ""
+    header: HeaderSection = HeaderSection()
+    # Now a list of sections instead of a single text block
+    about_sections: List[AboutSubSection] = Field(default_factory=list)
 
 
-# The Request Model for Updates
-class CompanyUpdate(BaseModel):
-    branding: Optional[BrandingConfig] = None
-    content: Optional[PageContent] = None
+# --- Request Models ---
 
 
 class CompanyCreate(BaseModel):
-    company_name: str = Field(..., min_length=2, example="White Carrot")
+    company_name: str = Field(..., min_length=2)
     branding: Optional[BrandingConfig] = None
-    content: Optional[PageContent] = None
+    page_content: Optional[PageContent] = None  # ← CHANGE: "content" to "page_content"
+
+
+class CompanyUpdate(BaseModel):
+    branding: Optional[BrandingConfig] = None
+    page_content: Optional[PageContent] = None  # ← CHANGE: "content" to "page_content"
+
+
+# --- Response Models ---
 
 
 class CompanyResponse(BaseModel):
@@ -40,8 +56,8 @@ class CompanyResponse(BaseModel):
     slug: str
     company_name: str
     recruiter_id: str
-    branding_config: dict
-    page_content: dict
+    branding_config: BrandingConfig
+    page_content: PageContent
     created_at: datetime
     updated_at: datetime
 
@@ -49,28 +65,41 @@ class CompanyResponse(BaseModel):
 
 
 class CompanyPublicResponse(BaseModel):
-    """Public-facing company response (no recruiter_id exposed)."""
+    """Public-facing response (stripped sensitive data)."""
 
     id: int
     slug: str
     company_name: str
-    branding_config: dict
-    page_content: dict
+    branding_config: BrandingConfig
+    page_content: PageContent
     created_at: datetime
 
     model_config = {"from_attributes": True}
 
 
 class CompanyDetailResponse(BaseModel):
-    """Detailed response for recruiter viewing their own company."""
+    """Full detail for the recruiter editor."""
 
     id: int
     slug: str
     company_name: str
     recruiter_id: str
-    branding_config: dict
-    page_content: dict
+    branding_config: BrandingConfig
+    page_content: PageContent
     created_at: datetime
     updated_at: datetime
+
+    model_config = {"from_attributes": True}
+
+
+class CompanyBasicResponse(BaseModel):
+    """List view response."""
+
+    id: int
+    slug: str
+    company_name: str
+    recruiter_id: str
+    branding_config: BrandingConfig
+    created_at: datetime
 
     model_config = {"from_attributes": True}

@@ -47,7 +47,9 @@ def create_company(
             company_in.branding.model_dump(mode="json") if company_in.branding else {}
         ),
         page_content=(
-            company_in.content.model_dump(mode="json") if company_in.content else {}
+            company_in.page_content.model_dump(mode="json")
+            if company_in.page_content
+            else {}  # ← CHANGE: "content" to "page_content"
         ),
     )
 
@@ -66,13 +68,11 @@ def update_company(
     if not db_company:
         return None
 
-    # FIX: Check the Pydantic object directly, not a dumped dict
     if company_in.branding:
-        # Now we dump only the sub-model
         db_company.branding_config = company_in.branding.model_dump(mode="json")
 
-    if company_in.content:
-        db_company.page_content = company_in.content.model_dump(mode="json")
+    if company_in.page_content:  # ← CHANGE: "content" to "page_content"
+        db_company.page_content = company_in.page_content.model_dump(mode="json")
 
     db.commit()
     db.refresh(db_company)
@@ -92,4 +92,20 @@ def get_company_by_recruiter(
         db.query(Company)
         .filter(Company.slug == company_slug, Company.recruiter_id == recruiter_id)
         .first()
+    )
+
+
+def get_all_companies_by_recruiter(db: Session, recruiter_id: str):
+    """Fetch all companies for a given recruiter."""
+    return (
+        db.query(
+            Company.id,
+            Company.slug,
+            Company.company_name,
+            Company.recruiter_id,
+            Company.branding_config,
+            Company.created_at,
+        )
+        .filter(Company.recruiter_id == recruiter_id)
+        .all()
     )
