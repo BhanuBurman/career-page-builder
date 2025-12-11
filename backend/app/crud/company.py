@@ -60,7 +60,7 @@ def create_company(
 def update_company(
     db: Session, slug: str, company_in: schemas.CompanyUpdate
 ) -> Optional[Company]:
-    
+
     db_company = db.query(Company).filter(Company.slug == slug).first()
 
     if not db_company:
@@ -77,3 +77,19 @@ def update_company(
     db.commit()
     db.refresh(db_company)
     return db_company
+
+
+def get_company_by_slug_public(db: Session, slug: str) -> Optional[Company]:
+    """Fetch company data by slug for public access (no auth required)."""
+    return db.query(Company).filter(Company.slug == slug).first()
+
+
+def get_company_by_recruiter(
+    db: Session, company_slug: str, recruiter_id: str
+) -> Optional[Company]:
+    """Fetch company data by slug and recruiter_id for recruiter access."""
+    return (
+        db.query(Company)
+        .filter(Company.slug == company_slug, Company.recruiter_id == recruiter_id)
+        .first()
+    )

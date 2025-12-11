@@ -5,6 +5,8 @@ from app import schemas
 from app.crud.company import (
     create_company,
     update_company,
+    get_company_by_slug_public,
+    get_company_by_recruiter,
 )
 from app.dependencies import get_db
 from app.utils.authentication import verify_token
@@ -58,4 +60,50 @@ def update_company_endpoint(
             detail="Company not found",
         )
 
+    return company
+
+
+@router.get(
+    "/{company_slug}/careers",
+    response_model=schemas.CompanyPublicResponse,
+    status_code=status.HTTP_200_OK,
+)
+def get_company_public_endpoint(
+    company_slug: str,
+    db: Session = Depends(get_db),
+):
+    """Fetch company data by slug for public access (career page view)."""
+    company = get_company_by_slug_public(db, company_slug)
+    if not company:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Company not found",
+        )
+    return company
+
+
+@router.get(
+    "/{company_slug}/preview",
+    response_model=schemas.CompanyDetailResponse,
+    status_code=status.HTTP_200_OK,
+)
+def get_company_recruiter_endpoint(
+    company_slug: str,
+    db: Session = Depends(get_db),
+    token_payload=Depends(verify_token),
+):
+    """Fetch full company data for recruiter (requires authentication)."""
+    recruiter_id = token_payload.get("sub")
+    if not recruiter_id:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Missing user id in token",
+        )
+
+    company = get_company_by_recruiter(db, company_slug, recruiter_id)
+    if not company:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Company not found or you do not have access to it",
+        )
     return company

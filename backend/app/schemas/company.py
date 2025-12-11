@@ -46,3 +46,31 @@ class CompanyResponse(BaseModel):
     updated_at: datetime
 
     model_config = {"from_attributes": True}
+
+
+class CompanyPublicResponse(BaseModel):
+    """Public-facing company response (no recruiter_id exposed)."""
+
+    id: int
+    slug: str
+    company_name: str
+    branding_config: dict
+    page_content: dict
+    created_at: datetime
+
+    model_config = {"from_attributes": True}
+
+
+class CompanyDetailResponse(BaseModel):
+    """Detailed response for recruiter viewing their own company."""
+
+    id: int
+    slug: str
+    company_name: str
+    recruiter_id: str
+    branding_config: dict
+    page_content: dict
+    created_at: datetime
+    updated_at: datetime
+
+    model_config = {"from_attributes": True}

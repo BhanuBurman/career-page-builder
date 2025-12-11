@@ -4,5 +4,7 @@ from app.schemas.company import (  # noqa: F401
     CompanyCreate,
     CompanyResponse,
     CompanyUpdate,
+    CompanyPublicResponse,
+    CompanyDetailResponse,
 )
 
