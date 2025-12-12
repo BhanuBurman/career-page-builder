@@ -1,5 +1,3 @@
-from app.schemas.item import Item, ItemCreate 
-from app.schemas.user import User, UserCreate  
 from app.schemas.company import (
     CompanyCreate,
     CompanyResponse,
@@ -14,5 +12,6 @@ from app.schemas.job import (
     JobResponse,
     JobSummaryResponse,
     JobUpdate,
+    JobType
     )
 

@@ -38,32 +38,49 @@ export type JobUpdate = Partial<JobCreate>
 
 export const jobsService = {
   // GET /{company_slug}/jobs
-  getJobs: async (slug: string): Promise<Job[]> => {
-    const response = await apiClient.get(`/${slug}/jobs`)
+  // Accepts optional filters: { location?, jobType?, search? }
+  getJobs: async (
+    slug: string,
+    params?: { location?: string; jobType?: JobType; search?: string }
+  ): Promise<Job[]> => {
+    const queryParams: any = {}
+    if (params?.location) queryParams.location = params.location
+    if (params?.jobType) queryParams.job_type = params.jobType
+    if (params?.search) queryParams.search = params.search
+
+    const response = await apiClient.get(`/api/${slug}/jobs`, {
+      params: queryParams,
+    })
+    return response.data
+  },
+
+  // GET /{company_slug}/jobs/{job_id}
+  getJobById: async (slug: string, jobId: number): Promise<Job> => {
+    const response = await apiClient.get(`/api/${slug}/jobs/${jobId}`)
     return response.data
   },
 
   // POST /{company_slug}/jobs
   createJob: async (slug: string, data: JobCreate): Promise<Job> => {
-    const response = await apiClient.post(`/${slug}/jobs`, data)
+    const response = await apiClient.post(`/api/${slug}/jobs`, data)
     return response.data
   },
 
   // PATCH /{company_slug}/jobs/{job_id}
   updateJob: async (slug: string, jobId: number, data: JobUpdate): Promise<Job> => {
-    const response = await apiClient.patch(`/${slug}/jobs/${jobId}`, data)
+    const response = await apiClient.patch(`/api/${slug}/jobs/${jobId}`, data)
     return response.data
   },
 
   // DELETE /{company_slug}/jobs/{job_id}
   deleteJob: async (slug: string, jobId: number): Promise<void> => {
-    await apiClient.delete(`/${slug}/jobs/${jobId}`)
+    await apiClient.delete(`/api/${slug}/jobs/${jobId}`)
   },
 
   // PATCH /{company_slug}/jobs/{job_id}/toggle?is_active={bool}
   toggleJobStatus: async (slug: string, jobId: number, isActive: boolean): Promise<Job> => {
     // Note: Passing boolean as query param as defined in your FastAPI endpoint
-    const response = await apiClient.patch(`/${slug}/jobs/${jobId}/toggle`, null, {
+    const response = await apiClient.patch(`/api/${slug}/jobs/${jobId}/toggle`, null, {
       params: { is_active: isActive }
     })
     return response.data

@@ -25,14 +25,9 @@ class Settings:
         ]
         
         # Supabase configuration
-        # JWT Secret: Used for verifying tokens from frontend (new format)
-        # Get this from: Supabase Dashboard -> Project Settings -> API -> JWT Secret
         self.supabase_jwt_secret: str = os.getenv("SUPABASE_JWT_SECRET", "")
         self.supabase_url: str = os.getenv("SUPABASE_URL", "")
         
-        # Secret Key: For server-side admin operations (if needed in future)
-        # Get this from: Supabase Dashboard -> Project Settings -> API -> Secret Key
-        # WARNING: Never expose this in frontend code
         self.supabase_secret_key: str = os.getenv("SUPABASE_SECRET_KEY", "")
 
 

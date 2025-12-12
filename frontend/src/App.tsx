@@ -11,6 +11,7 @@ import './App.css'
 import PageBuilder from './pages/PageBuilder'
 import CareerPage from './pages/CareerPage'
 import JobCreateSection from './components/JobCreateSection'
+import JobDetailPage from './pages/JobDetailPage'
 
 function App() {
   return (
@@ -22,6 +23,7 @@ function App() {
           <Route path="/" element={<HomePage />} />
           <Route path="/auth" element={<AuthPage />} />
           <Route path="/:slug/careers" element={<CareerPage />} />
+          <Route path="/:slug/jobs/:jobId" element={<JobDetailPage/>} />
 
           {/* Protected Routes (Require Login) */}
           <Route 
@@ -49,7 +51,7 @@ function App() {
             } 
           />
           <Route 
-            path="/manage-jobs" 
+            path="/:slug/manage-jobs" 
             element={
               <ProtectedRoute>
                 <JobCreateSection />

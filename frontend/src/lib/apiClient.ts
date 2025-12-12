@@ -42,7 +42,7 @@ export const apiClient = axios.create({
 apiClient.interceptors.request.use(
   async (config) => {
     const token = await getSupabaseAccessToken()
-    
+    console.log('Attaching token to request:', token) // remove in prod
     if (token) {
       config.headers.Authorization = `Bearer ${token}`
     }

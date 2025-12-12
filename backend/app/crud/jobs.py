@@ -35,10 +35,16 @@ def get_jobs_by_company(
     db: Session,
     company_id: int,
     active_only: bool = False,  # Default to returning all jobs
+    location: Optional[str] = None,
+    job_type: Optional[str] = None,
+    search: Optional[str] = None,
 ) -> List[Job]:
     """
-    Fetch jobs for a company.
-    If active_only is True, filters for active jobs only.
+    Fetch jobs for a company with optional filters.
+    - `active_only`: if True, returns only active jobs.
+    - `location`: partial match against `Job.location` (case-insensitive).
+    - `job_type`: exact match against `Job.job_type`.
+    - `search`: partial match against `Job.title` (case-insensitive).
     """
     # 1. Start the base query with specific columns
     query = db.query(
@@ -53,9 +59,20 @@ def get_jobs_by_company(
         Job.is_active,  # Useful to include this so the frontend knows the status
     ).filter(Job.company_id == company_id)
 
-    # 2. Apply the conditional filter
+    # 2. Apply the conditional filters
     if active_only:
         query = query.filter(Job.is_active == True)
+
+    if location:
+        # case-insensitive partial match
+        query = query.filter(Job.location.ilike(f"%{location}%"))
+
+    if job_type:
+        query = query.filter(Job.job_type == job_type)
+
+    if search:
+        # search against title
+        query = query.filter(Job.title.ilike(f"%{search}%"))
 
     return query.all()
 

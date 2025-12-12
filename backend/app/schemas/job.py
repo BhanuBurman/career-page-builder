@@ -29,6 +29,8 @@ class JobBase(BaseModel):
 # 2. Create Schema (Input Validation)
 class JobCreate(JobBase):
 
+    description: Optional[str] = None
+
     # ✅ LOGIC CHECK: Max salary cannot be less than Min salary
     @model_validator(mode="after")
     def check_salary_range(self):

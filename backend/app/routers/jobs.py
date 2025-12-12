@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
-from typing import List
+from typing import List, Optional
 
 from app import schemas
 from app.crud.jobs import (
@@ -62,17 +62,33 @@ def create_job_endpoint(
 )
 def get_jobs_public_endpoint(
     company_slug: str,
+    location: Optional[str] = None,
+    job_type: Optional[schemas.JobType] = None,
+    search: Optional[str] = None,
     db: Session = Depends(get_db),
 ):
-    """Fetch all active jobs for a company (public view, no auth required)."""
+    """Fetch all active jobs for a company (public view, no auth required).
+
+    Optional query parameters:
+    - `location`: partial, case-insensitive match against job location
+    - `job_type`: filter by job type (uses `JobType` enum values)
+    - `search`: partial, case-insensitive match against job title
+    """
     company = get_company_by_slug(db, company_slug)
     if not company:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Company not found",
         )
-
-    jobs = get_jobs_by_company(db, company.id, active_only=False)
+    # Return only active jobs in the public endpoint by default
+    jobs = get_jobs_by_company(
+        db,
+        company.id,
+        active_only=True,
+        location=location,
+        job_type=job_type.value if job_type is not None else None,
+        search=search,
+    )
     return jobs
 
 
