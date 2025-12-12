@@ -7,6 +7,8 @@ from app.database import engine
 from app.routers import api_router
 from config import settings
 
+import os
+
 # Create DB tables at startup (safe to call multiple times)
 models.Base.metadata.create_all(bind=engine)
 
@@ -41,6 +43,7 @@ async def health_check():
 
 
 if __name__ == "__main__":
+    port = int(os.environ.get("PORT", settings.api_port))
     uvicorn.run(
         "main:app",
         host=settings.api_host,

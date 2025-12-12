@@ -75,7 +75,7 @@ const PageBuilder = () => {
         primary_color: form.primary_color,
         logo_url: form.logo_url,
       },
-      content: {
+      page_content: {
         header: {
           title: form.header_title,
           subtitle: form.header_subtitle,
